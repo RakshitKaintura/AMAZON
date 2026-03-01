@@ -2,27 +2,56 @@
 import { storesDummyData } from "@/assets/assets"
 import StoreInfo from "@/components/admin/StoreInfo"
 import Loading from "@/components/Loading"
+import { useAuth, useUser } from "@clerk/nextjs"
 import { useEffect, useState } from "react"
 import toast from "react-hot-toast"
 
 export default function AdminStores() {
 
+    const { user } = useUser()
+    const { getToken } = useAuth()
     const [stores, setStores] = useState([])
     const [loading, setLoading] = useState(true)
 
     const fetchStores = async () => {
-        setStores(storesDummyData)
-        setLoading(false)
-    }
+        setLoading(true); // Ensure loading starts before the try block
+        try {
+            const token = await getToken();
+            const { data } = await axios.get('/api/admin/stores', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            // Suggestion: Add a check to ensure data.stores exists before setting
+            setStores(data.stores || []);
+        } catch (error) {
+            const errorMessage = error?.response?.data?.error || error.message || "An unexpected error occurred";
+            toast.error(errorMessage);
+            console.error("Fetch Stores Error:", error); // Helpful for debugging
+        } finally {
+            setLoading(false); // Using finally ensures this runs even if the catch block fails
+        }
+    };
 
     const toggleIsActive = async (storeId) => {
-        // Logic to toggle the status of a store
+        try {
+            const token = await getToken()
+            const { data } = await axios.post('/api/admin/toggle-store', { storeId },
+                { headers: { Authorization: `Bearer ${token}` } })
 
+            await fetchStores()
+            toast.success(data.message)
+        } catch (error) {
+            toast.error(error?.response?.data?.error || error.message)
+        }
     }
 
     useEffect(() => {
-        fetchStores()
-    }, [])
+        if (user) {
+            fetchStores()
+        }
+    }, [user])
 
     return !loading ? (
         <div className="text-slate-500 mb-28">
