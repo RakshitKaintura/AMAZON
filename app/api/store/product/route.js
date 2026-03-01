@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Adjust path based on your setup
-import imagekit from "@/lib/imagekit"; // Adjust path based on your setup
+import prisma from "@/lib/prisma"
+import imagekit from "@/configs/imageKit"
 
 export async function POST(request) {
   try {

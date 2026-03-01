@@ -5,8 +5,7 @@ import toast from "react-hot-toast"
 import { DeleteIcon } from "lucide-react"
 import { couponDummyData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
-import { headers } from "next/headers"
-
+import axios from "axios"
 export default function AdminCoupons() {
 
     const { getToken } = useAuth()
