@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 import Loading from "@/components/Loading"
 import { orderDummyData } from "@/assets/assets"
-
+import axios from "axios";
 export default function StoreOrders() {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)

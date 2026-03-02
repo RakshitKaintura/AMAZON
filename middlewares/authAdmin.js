@@ -1,4 +1,4 @@
-import {clerkClient } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 
 const authAdmin = async (userId) => {
   try {
@@ -7,12 +7,21 @@ const authAdmin = async (userId) => {
     const client = await clerkClient();
     const user = await client.users.getUser(userId);
 
-    return process.env.ADMIN_EMAIL.split(',').includes(
-      user.emailAddresses[0].emailAddress
-    );
+    // Ensure the environment variable exists
+    if (!process.env.ADMIN_EMAIL) {
+      console.error("ADMIN_EMAIL is not defined in environment variables");
+      return false;
+    }
+
+    // Normalize both the .env string and the Clerk email to lowercase and trim spaces
+    const adminEmails = process.env.ADMIN_EMAIL.split(',').map(e => e.trim().toLowerCase());
+    const userEmail = user.emailAddresses[0].emailAddress.toLowerCase();
+
+    return adminEmails.includes(userEmail);
   } catch (error) {
-    console.error(error);
+    console.error("Admin Auth Error:", error);
     return false;
   }
 }
+
 export default authAdmin;

@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast"
 import Image from "next/image"
 import Loading from "@/components/Loading"
 import { productDummyData } from "@/assets/assets"
-
+import axios from "axios";
 export default function StoreManageProducts() {
 
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'

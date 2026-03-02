@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from "react"
 import Loading from "../Loading"
+import axios from "axios";
 import Link from "next/link"
 import { ArrowRightIcon } from "lucide-react"
 import AdminNavbar from "./AdminNavbar"

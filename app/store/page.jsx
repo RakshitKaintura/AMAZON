@@ -5,7 +5,7 @@ import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon } from "lu
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
-
+import axios from "axios";
 export default function Dashboard() {
     const {getToken}=useAuth()
     const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
