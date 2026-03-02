@@ -2,27 +2,36 @@ import imagekit from "@/configs/imageKit";
 import prisma from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+
+// Ensures the route is not statically optimized, preventing 405 errors on Vercel
 export const dynamic = 'force-dynamic';
+
 // GET Handler: Checks registration status
 export async function GET(request) {
   try {
     const { userId } = getAuth(request);
 
-    // check is user have already registered a store
-    const store = await prisma.store.findFirst({
-      where: { userId: userId }
-    })
-
-    // if store is already registered then send status of store
-    if(store){
-      return NextResponse.json({status: store.status})
+    if (!userId) {
+      return NextResponse.json({ status: "unauthorized" }, { status: 401 });
     }
 
-    return NextResponse.json({status: "not registered"})
+    // Check if user has already registered a store
+    const store = await prisma.store.findFirst({
+      where: { userId: userId }
+    });
+
+    if (store) {
+      return NextResponse.json({ status: store.status });
+    }
+
+    return NextResponse.json({ status: "not registered" });
 
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({error: error.code || error.message}, { status: 400 })
+    console.error("GET Store Status Error:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" }, 
+      { status: 500 }
+    );
   }
 }
 
@@ -36,78 +45,92 @@ export async function POST(request) {
     }
 
     const formData = await request.formData();
-    const name = formData.get("name");
-    const username = formData.get("username");
-    const description = formData.get("description");
-    const email = formData.get("email");
-    const contact = formData.get("contact");
-    const address = formData.get("address");
+    // Use .toString().trim() to ensure clean data from form inputs
+    const name = formData.get("name")?.toString().trim();
+    const username = formData.get("username")?.toString().toLowerCase().trim();
+    const description = formData.get("description")?.toString().trim();
+    const email = formData.get("email")?.toString().trim();
+    const contact = formData.get("contact")?.toString().trim();
+    const address = formData.get("address")?.toString().trim();
     const image = formData.get("image");
 
     // 1. Validate required fields
-    if(!name || !username || !description || !email || !contact || !address || !image){
-        return NextResponse.json({error: "missing store info"}, {status: 400})
+    if (!name || !username || !description || !email || !contact || !address || !image) {
+      return NextResponse.json({ error: "Missing required store information" }, { status: 400 });
     }
 
     // 2. Check if user already registered a store
-    const store = await prisma.store.findFirst({
-        where: { userId: userId }
-    })
+    const existingStore = await prisma.store.findFirst({
+      where: { userId: userId }
+    });
 
-    if(store){
-        return NextResponse.json({status: store.status})
+    if (existingStore) {
+      return NextResponse.json({ status: existingStore.status });
     }
 
     // 3. Check if username is already taken
     const isUsernameTaken = await prisma.store.findFirst({
-        where: { username: username.toLowerCase() }
-    })
+      where: { username: username }
+    });
 
-    if(isUsernameTaken){
-        return NextResponse.json({error: "username already taken"}, {status: 400})
+    if (isUsernameTaken) {
+      return NextResponse.json({ error: "Username already taken" }, { status: 400 });
     }
 
     // 4. Image upload and optimization via ImageKit
     const buffer = Buffer.from(await image.arrayBuffer());
-    const response = await imagekit.upload({
-        file: buffer,
-        fileName: image.name,
-        folder: "logos"
-    })
+    const uploadResponse = await imagekit.upload({
+      file: buffer,
+      fileName: `${userId}_${Date.now()}_${image.name}`,
+      folder: "store_logos"
+    });
 
-    const optimizedImage = imagekit.url({
-        path: response.filePath,
-        transformation: [
-            {quality: 'auto'},
-            {format: 'webp'},
-            {width: '512'}
-        ]
-    })
+    const optimizedImageUrl = imagekit.url({
+      path: uploadResponse.filePath,
+      transformation: [
+        { quality: 'auto' },
+        { format: 'webp' },
+        { width: '512' }
+      ]
+    });
 
-    // 5. Create new store record
-    const newStore = await prisma.store.create({
+    // 5 & 6. Create store and link to user in a single Transaction
+    // This ensures that if linking the user fails, the store is not created (maintains data integrity)
+    await prisma.$transaction(async (tx) => {
+      const newStore = await tx.store.create({
         data: {
-            userId,
-            name,
-            description,
-            username: username.toLowerCase(),
-            email,
-            contact,
-            address,
-            logo: optimizedImage
+          userId,
+          name,
+          description,
+          username,
+          email,
+          contact,
+          address,
+          logo: optimizedImageUrl
         }
-    })
+      });
 
-    // 6. Link store to the user model
-    await prisma.user.update({
+      await tx.user.update({
         where: { id: userId },
-        data: {store: {connect: {id: newStore.id}}}
-    })
+        data: { 
+          store: { connect: { id: newStore.id } } 
+        }
+      });
+    });
 
-    return NextResponse.json({message: "applied, waiting for approval"})
+    return NextResponse.json({ message: "Applied successfully, waiting for approval" });
 
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({error: error.code || error.message}, { status: 400 })
+    console.error("POST Create Store Error:", error);
+    
+    // Handle specific Prisma unique constraint errors
+    if (error.code === 'P2002') {
+      return NextResponse.json({ error: "A store with this username already exists" }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: error.message || "Failed to process store application" }, 
+      { status: 500 }
+    );
   }
 }
