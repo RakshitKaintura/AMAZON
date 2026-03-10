@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma"
 import imagekit from "@/configs/imageKit"
-
+import { getAuth } from "@clerk/nextjs/server";
+import authSeller from "@/middlewares/authSeller";  
 export async function POST(request) {
   try {
     // Get the data from the form
@@ -26,10 +27,10 @@ export async function POST(request) {
     const imagesUrl = await Promise.all(
       images.map(async (image) => {
         const buffer = Buffer.from(await image.arrayBuffer());
-        
+
         const response = await imagekit.upload({
-          file: buffer,
-          fileName: image.name,
+          file: buffer.toString("base64"),
+          fileName: `${Date.now()}_${image.name}`,
           folder: "products",
         });
 
@@ -76,7 +77,7 @@ export async function GET(request) {
     const { userId } = getAuth(request)
     const storeId = await authSeller(userId)
 
-    if(!storeId) {
+    if (!storeId) {
       return NextResponse.json({ error: 'not authorized' }, { status: 401 })
     }
 

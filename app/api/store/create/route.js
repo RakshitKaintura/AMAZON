@@ -3,7 +3,6 @@ import prisma from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
-// Ensures the route is not statically optimized, preventing 405 errors on Vercel
 export const dynamic = 'force-dynamic';
 
 // GET Handler: Checks registration status
