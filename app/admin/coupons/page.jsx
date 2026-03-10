@@ -43,7 +43,7 @@ export default function AdminCoupons() {
             newCoupon.discount=Number(newCoupon.discount)
             newCoupon.expiresAt=new Date(newCoupon.expiresAt)
 
-            const {data}=await axios.post('api/admin/coupon',{coupon:newCoupon},{headers:{Authorization:`Bearer ${token}`}})
+            const {data}=await axios.post('/api/admin/coupon',{coupon:newCoupon},{headers:{Authorization:`Bearer ${token}`}})
             toast.success(data.message)
             await fetchCoupons()
             // Logic to add a coupon
