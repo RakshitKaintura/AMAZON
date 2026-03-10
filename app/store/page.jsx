@@ -5,6 +5,8 @@ import { CircleDollarSignIcon, ShoppingBasketIcon, StarIcon, TagsIcon } from "lu
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
+import { useAuth } from "@clerk/nextjs"
+import toast from "react-hot-toast"
 import axios from "axios";
 export default function Dashboard() {
     const {getToken}=useAuth()
@@ -43,8 +45,10 @@ export default function Dashboard() {
 }
 
     useEffect(() => {
-        fetchDashboardData()
-    }, [])
+  if (getToken) {
+    fetchDashboardData()
+  }
+}, [getToken])
 
     if (loading) return <Loading />
 
