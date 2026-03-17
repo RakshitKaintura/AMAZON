@@ -7,6 +7,7 @@ import SellerNavbar from "./StoreNavbar"
 import SellerSidebar from "./StoreSidebar"
 import { dummyStoreData } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
+import axios from "axios"
 
 const StoreLayout = ({ children }) => {
 
