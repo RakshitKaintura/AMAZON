@@ -74,7 +74,6 @@ const OrderSummary = ({ totalPrice, items }) => {
         } catch (error) {
             toast.error(error?.response?.data?.error || error.message)
         }
-        router.push('/orders')
     }
 
     return (
