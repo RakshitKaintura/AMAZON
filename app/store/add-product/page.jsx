@@ -1,6 +1,7 @@
 'use client'
 import { assets } from "@/assets/assets"
 import { useAuth } from "@clerk/nextjs"
+import axios from "axios"
 import Image from "next/image"
 import { useState } from "react"
 import { toast } from "react-hot-toast"
@@ -31,7 +32,7 @@ export default function StoreAddProduct() {
         if (key === "1" && file && !aiUsed) {
             const reader = new FileReader()
             reader.readAsDataURL(file)
-            reader.onloaded = async () => {
+            reader.onload = async () => {
                 const base64String = reader.result.split(",")[1]
                 const mimeType = file.type
                 const token = await getToken()
