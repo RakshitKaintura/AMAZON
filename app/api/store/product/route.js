@@ -5,6 +5,13 @@ import { getAuth } from "@clerk/nextjs/server";
 import authSeller from "@/middlewares/authSeller";  
 export async function POST(request) {
   try {
+    const { userId } = getAuth(request);
+    const storeId = await authSeller(userId);
+
+    if (!storeId) {
+      return NextResponse.json({ error: 'not authorized' }, { status: 401 });
+    }
+
     // Get the data from the form
     const formData = await request.formData();
     const name = formData.get("name");
@@ -13,7 +20,6 @@ export async function POST(request) {
     const price = Number(formData.get("price"));
     const category = formData.get("category");
     const images = formData.getAll("images");
-    const storeId = formData.get("storeId"); // Ensure this is passed from the frontend
 
     // Validation
     if (!name || !description || !mrp || !price || !category || images.length < 1) {
