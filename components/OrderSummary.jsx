@@ -4,8 +4,8 @@ import AddressModal from './AddressModal';
 import { useDispatch, useSelector } from 'react-redux';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/navigation';
-import { Protect } from '@clerk/nextjs';
-import { addRequestMeta } from 'next/dist/server/request-meta';
+import { useAuth, useUser } from '@clerk/nextjs';
+import axios from 'axios';
 import { fetchCart } from '@/lib/features/cart/cartSlice';
 const OrderSummary = ({ totalPrice, items }) => {
     const {user}=useUser()
@@ -78,7 +78,7 @@ const OrderSummary = ({ totalPrice, items }) => {
     }
 
     return (
-        <div className='w-full max-w-lg lg:max-w-[340px] bg-slate-50/30 border border-slate-200 text-slate-500 text-sm rounded-xl p-7'>
+        <div className='w-full max-w-lg lg:max-w-85 bg-slate-50/30 border border-slate-200 text-slate-500 text-sm rounded-xl p-7'>
             <h2 className='text-xl font-medium text-slate-600'>Payment Summary</h2>
             <p className='text-slate-400 text-xs my-4'>Payment Method</p>
             <div className='flex gap-2 items-center'>
