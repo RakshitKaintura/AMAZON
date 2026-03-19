@@ -6,7 +6,7 @@ import Link from "next/link"
 import { ArrowRightIcon } from "lucide-react"
 import AdminNavbar from "./AdminNavbar"
 import AdminSidebar from "./AdminSidebar"
-import { useUser,useAuth } from "@clerk/nextjs"
+import { useUser, useAuth, UserButton } from "@clerk/nextjs"
 
 const AdminLayout = ({ children }) => {
 
@@ -47,7 +47,10 @@ const AdminLayout = ({ children }) => {
             </div>
         </div>
     ) : (
-        <div className="min-h-screen flex flex-col items-center justify-center text-center px-6">
+        <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 relative">
+             <div className="absolute top-6 right-6">
+                 <UserButton afterSignOutUrl="/" />
+            </div>
             <h1 className="text-2xl sm:text-4xl font-semibold text-slate-400">You are not authorized to access this page</h1>
             <Link href="/" className="bg-slate-700 text-white flex items-center gap-2 mt-8 p-2 px-6 max-sm:text-sm rounded-full">
                 Go to home <ArrowRightIcon size={18} />
