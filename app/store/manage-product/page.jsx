@@ -8,7 +8,7 @@ import axios from "axios";
 import { useAuth, useUser } from "@clerk/nextjs"
 export default function StoreManageProducts() {
 
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '₹'
     const { getToken } = useAuth()
 
     const { user } = useUser()
@@ -33,7 +33,7 @@ export default function StoreManageProducts() {
     const toggleStock = async (productId) => {
         try{
         const token = await getToken()
-        const { data } = await axios.post('/api/store/stock-toggle', { productId },
+        const { data } = await axios.post('/api/stock-toggle', { productId },
             { headers: { Authorization: `Bearer ${token}` } })
         setProducts(prevProducts => prevProducts.map(product => product.id ===
             productId ? { ...product, inStock: !product.inStock } : product))

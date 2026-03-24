@@ -9,7 +9,7 @@ import axios from "axios";
 export default function AdminDashboard() {
 
     const {getToken}=useAuth()
-    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '$'
+    const currency = process.env.NEXT_PUBLIC_CURRENCY_SYMBOL || '₹'
 
     const [loading, setLoading] = useState(true)
     const [dashboardData, setDashboardData] = useState({

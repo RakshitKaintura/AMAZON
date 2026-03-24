@@ -1,10 +1,11 @@
 import authSeller from "@/middlewares/authSeller";
+import prisma from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 
 export async function POST(request) {
     try {
-        const {userId}=getAuth()
+        const {userId}=getAuth(request)
         const storeId=await authSeller(userId)
 
         if(!storeId){
@@ -48,7 +49,7 @@ export async function GET(request) {
     })
 
     // Note: The original image cuts off here, but usually you would return the orders:
-    return NextResponse.json(orders)
+    return NextResponse.json({ orders })
 
   } catch (error) {
     // And handle the error response:

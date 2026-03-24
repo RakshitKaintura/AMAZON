@@ -17,6 +17,11 @@ export async function GET(request) {
             }
           }
         },
+        orderItems: {
+          select: {
+            quantity: true
+          }
+        },
         store: true,
       },
       orderBy: { createdAt: 'desc' }
