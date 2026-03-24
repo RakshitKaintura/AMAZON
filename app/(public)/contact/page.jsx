@@ -1,18 +1,7 @@
-async function getContactData() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/api/contact`, {
-    cache: "no-store"
-  });
+import { contactData } from "@/lib/siteContent";
 
-  if (!res.ok) {
-    return null;
-  }
-
-  const data = await res.json();
-  return data.contact;
-}
-
-export default async function ContactPage() {
-  const contact = await getContactData();
+export default function ContactPage() {
+  const contact = contactData;
 
   return (
     <div className="min-h-[70vh] mx-6 py-10 text-slate-700">
