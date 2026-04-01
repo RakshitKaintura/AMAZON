@@ -7,7 +7,7 @@ import { NextResponse } from "next/server";
 export async function GET(request) {
   try {
     const { userId } = getAuth(request);
-
+      
     // 1️⃣ Check if user is logged in
     if (!userId) {
       return NextResponse.json(

@@ -1,6 +1,7 @@
 import prisma from "@/lib/prisma";
 import { getAuth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import { refreshProductReviewInsights } from "@/lib/reviewInsights";
 
 export async function POST(request) {
     try {
@@ -12,7 +13,7 @@ export async function POST(request) {
             return NextResponse.json({error:"Order  not found"},{status:404})
         }
 
-        const isAlreadyRated=await prisma.rating.findFirst({where:{productId,orderId}})
+        const isAlreadyRated=await prisma.rating.findFirst({where:{userId,productId,orderId}})
 
         if(isAlreadyRated){
             return NextResponse.json({error:"Product already rated"},{status:400})
@@ -20,6 +21,8 @@ export async function POST(request) {
         const response=await prisma.rating.create({
             data:{userId,productId,rating,review,orderId}
         })
+
+        await refreshProductReviewInsights(productId)
 
         return NextResponse.json({message: "Rating added successfully",rating:response})
     } catch (error) {
