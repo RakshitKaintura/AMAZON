@@ -1,6 +1,6 @@
 # Amazon-Like E-Commerce Platform
 
-Fast, polished, and production-ready e‑commerce starter showcasing seller workflows, admin tooling, secure Stripe checkout, and AI-driven review insights — designed to impress recruiters and contributors. ✨
+Fast, polished, and production-ready e‑commerce starter showcasing seller workflows, admin tooling, secure Stripe checkout, and AI-driven review insights and AI Product Reviews Summarizer
 
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](#) [![Deploy](https://img.shields.io/badge/deploy-vercel-blue)](#) [![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey)](#)
 
