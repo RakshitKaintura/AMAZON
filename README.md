@@ -35,7 +35,7 @@ Fast, polished, and production-ready e‑commerce starter showcasing seller work
 | :---: | :---: |
 | <img src="assets/README_IMAGES/SellerDashboard.png" width="400" alt="Seller Dashboard" /> | <img src="assets/README_IMAGES/Manage_Products.png" width="400" alt="Manage Products" /> |
 | **Seller Dashboard** | **Inventory Management** |
-| <img src="assets/README_IMAGES/Add_New_Products.png" width="400" alt="Add New Product" /> | <img src="assets/README_IMAGES/OrdersPage.png" width="400" alt="Orders Page" /> |
+| <img src="assets/README_IMAGES/Add_New_Products.png" width="400" alt="Add New Product" /> | <img src="assets/README_IMAGES/Screenshot 2026-04-04 183837.png" height=500 width="400" alt="Orders Page" /> |
 | **Add New Product** | **Order Tracking** |
 
 ### Admin Control Panel
