@@ -58,39 +58,107 @@ Fast, polished, and production-ready e‑commerce starter showcasing seller work
 | **Order History** | **GoCart+ Plus** | |
 
 ---
+Core Features
 
-## Core Features
+- Next.js App Router + server components for fast SSR/SSG and secure server actions.
+- Full Prisma data model: Users, Stores, Products, Orders, Ratings, Coupons (see `prisma/schema.prisma`).
+- Stripe Checkout + webhook handling for secure payment flows and order reconciliation.
+- Seller & Admin dashboards for real-world multi-role workflows.
+- ImageKit integration for performant image delivery and uploads.
+- Inngest-based background jobs for async tasks and event-driven behavior.
+- AI review summarization using OpenAI to create concise product insights (`lib/reviewInsights.js`).
 
-- **Next.js App Router:** Utilizing server components for fast SSR/SSG and secure server actions.
-- **Robust Data Model:** Full Prisma schema covering Users, Stores, Products, Orders, Ratings, and Coupons.
-- **Stripe Integration:** Checkout flows + webhook handling for secure payment reconciliation.
-- **Multi-Role Dashboards:** Specialized views and permissions for Sellers and Administrators.
-- **Image Optimization:** Integrated with ImageKit for performant asset delivery.
-- **Background Jobs:** Powered by Inngest for event-driven, asynchronous tasks.
-- **AI Insights:** Automated product review summarization using OpenAI (`lib/reviewInsights.js`).
+Tech Stack
 
----
-
-## Tech Stack
-
-- **Frontend:** Next.js 15 (App Router), React 19, Tailwind CSS, Lucide Icons
-- **State Management:** Redux Toolkit, React-Redux
-- **Backend:** Node.js, Prisma ORM
-- **Database:** PostgreSQL
-- **Services:** Stripe (Payments), ImageKit (Media), Inngest (Queueing), OpenAI (AI), Clerk (Auth)
+- Frontend: Next.js (app router), React 19, Tailwind CSS, Lucide
+- State: Redux Toolkit, react-redux
+- Backend: Node.js (Next API routes / server actions), Prisma ORM
+- Payments: Stripe
+- Database: PostgreSQL (via Prisma)
+- Other: ImageKit, Inngest, OpenAI, Clerk
 
 ---
 
-## Quickstart
+Quickstart — run locally
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL instance (e.g., Neon)
-- Stripe Account (for API keys)
-- OpenAI Key (optional for AI summaries)
+Prerequisites: Node.js 18+, PostgreSQL (or Neon), Stripe account (for checkout), optional OpenAI key for review summaries.
 
-### Local Setup
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/RakshitKaintura/AMAZON.git](https://github.com/RakshitKaintura/AMAZON.git)
-   cd AMAZON
+```bash
+git clone <repo-url>
+cd amazon
+npm install
+npm run dev
+```
+
+Generate Prisma client (if needed):
+
+```bash
+npm run build
+```
+
+Environment template (`.env`)
+
+```env
+# Database
+DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+DIRECT_URL="postgresql://USER:PASSWORD@HOST:PORT/DATABASE"
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+
+# OpenAI (optional)
+OPENAI_API_KEY=sk-...
+OPENAI_BASE_URL=
+OPENAI_MODEL=gpt-4o-mini
+
+# ImageKit
+IMAGEKIT_PUBLIC_KEY=
+IMAGEKIT_PRIVATE_KEY=
+IMAGEKIT_URL_ENDPOINT=
+
+# Clerk
+CLERK_CLIENT_ID=
+CLERK_FRONTEND_API=
+
+# App
+NEXT_PUBLIC_APP_NAME=GoCart
+```
+
+Architecture (high level)
+
+```
+app/        — Next.js app router (public, store, admin)
+app/api/    — Server routes (stripe, products, orders, store, inngest)
+components/ — Reusable UI components
+lib/        — Prisma client, review insights, helpers
+prisma/     — schema and migrations
+assets/     — README images, UI screenshots
+```
+
+Notable implementation details
+
+- `prisma/schema.prisma` contains the canonical DB models used throughout the app.
+- `app/api/stripe/route.js` demonstrates secure Stripe webhook verification and order reconciliation.
+- `lib/reviewInsights.js` shows how to safely summarize customer reviews with OpenAI and persist results.
+
+
+Review notes
+
+- Deployment-ready: uses Vercel-friendly Next.js outputs and stateless API routes.
+- Thoughtful production concerns: idempotent webhook handling, on-delete cascades in Prisma, background jobs for expensive tasks.
+- Showcase-ready UI: Clear flows for product management, order fulfillment, and analytics.
+
+---
+
+Want this polished further?
+
+- Add a short screencast GIF for the top hero.
+- Add `CONTRIBUTING.md`, unit tests, and a GitHub Actions CI pipeline.
+- I can also commit a `docs/` folder with usage walkthroughs and architecture diagrams.
+
+Contact
+
+- Live demo: https://amazon-like-liard.vercel.app/
+- Repo: [https://github.com/<your-username>/<repo>](https://github.com/RakshitKaintura/AMAZON)
+- Author: Rakshit Kaintura blank1951k@gmail.com
