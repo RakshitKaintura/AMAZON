@@ -35,12 +35,12 @@ Home / Landing
 Seller Experience — grouped (dashboard, manage, add product, orders)
 
 <p align="center">
-	<img src="assets/README_IMAGES/SellerDashboard.png" alt="Seller Dashboard"height=350 width="420" />
-	<img src="assets/README_IMAGES/Manage_Products.png" alt="Manage Products" height=350 width="420" />
+	<img src="assets/README_IMAGES/SellerDashboard.png" alt="Seller Dashboard"height=350 width="350" />
+	<img src="assets/README_IMAGES/Manage_Products.png" alt="Manage Products" height=350 width="350" />
 </p>
 <p align="center">
-	<img src="assets/README_IMAGES/Add_New_Products.png" alt="Add New Product"height=350  width="420" />
-	<img src="assets/README_IMAGES/OrdersPage.png" alt="Orders"height=350 width="420" />
+	<img src="assets/README_IMAGES/Add_New_Products.png" alt="Add New Product"height=350  width="350" />
+	<img src="assets/README_IMAGES/OrdersPage.png" alt="Orders"height=350 width="350" />
 </p>
 
 Admin Panels — grouped (dashboard, stores, coupons)
