@@ -164,9 +164,8 @@ Want this polished further?
 Contact
 
 - Live demo: https://amazon-like-liard.vercel.app/
-- Repo: https://github.com/<your-username>/<repo>
-- Author: Your Name — your.email@example.com
+- Repo: [https://github.com/<your-username>/<repo>](https://github.com/RakshitKaintura/AMAZON)
+- Author: Rakshit Kaintura blank1951k@gmail.com
 
 ---
 
-Made with ❤️ — ready for recruiters and contributors.
