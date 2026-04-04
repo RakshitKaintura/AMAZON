@@ -1,4 +1,4 @@
-# GoCart — Next.js E‑commerce (Portfolio Showcase)
+# Amazon-Like E-Commerce Platform
 
 Fast, polished, and production-ready e‑commerce starter showcasing seller workflows, admin tooling, secure Stripe checkout, and AI-driven review insights — designed to impress recruiters and contributors. ✨
 
@@ -7,9 +7,6 @@ Fast, polished, and production-ready e‑commerce starter showcasing seller work
  
  [![Contribute](https://img.shields.io/badge/CONTRIBUTE-guidelines-brightgreen)](CONTRIBUTING.md) [![Code of Conduct](https://img.shields.io/badge/Code%20of%20Conduct-Required-lightgrey)](CODE_OF_CONDUCT.md)
  
- Hero demo GIF
- 
- _*To add a short screencast GIF at the top of the README, save an animated GIF named `hero-demo.gif` into `assets/README_IMAGES/` and it will render here.*_
 
 ---
 
@@ -34,11 +31,6 @@ Home / Landing
 	<img src="assets/README_IMAGES/HOME_PAGE.png" alt="Home Page" width="900" />
 </p>
 
-Authentication & Chat (auth screens + chat UI sample)
-
-<p align="center">
-	<img src="assets/README_IMAGES/Authentication_and_Chat.png" alt="Authentication and Chat sample" width="900" />
-</p>
 
 Seller Experience — grouped (dashboard, manage, add product, orders)
 
