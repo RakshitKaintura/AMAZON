@@ -163,4 +163,4 @@ Contact
 - Live demo: https://amazon-like-liard.vercel.app/
 - Repo: [https://github.com/<your-username>/<repo>](https://github.com/RakshitKaintura/AMAZON)
 - Author: Rakshit Kaintura blank1951k@gmail.com
->>>>>>> c900503d0290af82f5d071b0136b04fd57a6b608
+>>>>>>>
