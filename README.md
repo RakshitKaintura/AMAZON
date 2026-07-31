@@ -8,6 +8,8 @@ Fast, polished, and production-ready e‑commerce starter showcasing seller work
 [![Contribute](https://img.shields.io/badge/CONTRIBUTE-guidelines-brightgreen)](CONTRIBUTING.md)
 
 ---
+## Live Demo Link
+- Live demo: https://amazon-like-liard.vercel.app
 
 ## Why this project matters
 
@@ -159,7 +161,7 @@ Want this polished further?
 
 Contact
 
-- Live demo: https://amazon-like-liard.vercel.app/
+
 - Repo: [https://github.com/<your-username>/<repo>](https://github.com/RakshitKaintura/AMAZON)
 - Author: Rakshit Kaintura blank1951k@gmail.com
 >>>>>>>
