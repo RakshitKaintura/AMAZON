@@ -1,0 +1,1066 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>GoCart — Architecture Documentation</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'dark',
+      themeVariables: {
+        primaryColor: '#6366f1',
+        primaryTextColor: '#f1f5f9',
+        primaryBorderColor: '#818cf8',
+        lineColor: '#818cf8',
+        secondaryColor: '#1e293b',
+        tertiaryColor: '#0f172a',
+        fontFamily: 'Inter, system-ui, sans-serif',
+        fontSize: '14px'
+      }
+    });
+    window.mermaid = mermaid;
+  </script>
+  <style>
+    /* ── Reset & Base ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #060a14;
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── Background glow ───────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%; left: -50%;
+      width: 200%; height: 200%;
+      background: radial-gradient(ellipse at 30% 20%, rgba(99,102,241,0.08) 0%, transparent 50%),
+                  radial-gradient(ellipse at 70% 80%, rgba(139,92,246,0.06) 0%, transparent 50%);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* ── Scrollbar ─────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* ── Navigation ────────────────────────────────────────── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(6, 10, 20, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid rgba(99,102,241,0.15);
+      padding: 0 24px;
+    }
+    .nav-inner {
+      max-width: 1320px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 18px; color: #f1f5f9;
+      text-decoration: none;
+    }
+    .nav-brand .dot { color: #818cf8; }
+    .nav-links {
+      display: flex; gap: 4px; list-style: none;
+      flex-wrap: wrap;
+    }
+    .nav-links a {
+      padding: 8px 14px; border-radius: 8px;
+      font-size: 13px; font-weight: 500; color: #94a3b8;
+      text-decoration: none; transition: all 0.2s;
+      white-space: nowrap;
+    }
+    .nav-links a:hover, .nav-links a.active {
+      color: #e2e8f0;
+      background: rgba(99,102,241,0.12);
+    }
+
+    /* ── Main Container ────────────────────────────────────── */
+    .container {
+      max-width: 1320px; margin: 0 auto;
+      padding: 88px 24px 60px;
+    }
+
+    /* ── Hero ──────────────────────────────────────────────── */
+    .hero {
+      text-align: center; padding: 60px 0 40px;
+    }
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 100px;
+      font-size: 12px; font-weight: 600;
+      color: #a5b4fc; letter-spacing: 0.08em; text-transform: uppercase;
+      background: rgba(99,102,241,0.1);
+      border: 1px solid rgba(99,102,241,0.2);
+      margin-bottom: 20px;
+    }
+    .hero-badge::before { content: '◆'; font-size: 8px; }
+    .hero h1 {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800; line-height: 1.1;
+      background: linear-gradient(135deg, #f1f5f9 0%, #a5b4fc 50%, #818cf8 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 16px;
+    }
+    .hero p {
+      font-size: 17px; color: #94a3b8; max-width: 620px; margin: 0 auto;
+    }
+
+    /* ── Section ───────────────────────────────────────────── */
+    .section {
+      margin-bottom: 56px;
+      scroll-margin-top: 80px;
+    }
+    .section-header {
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 24px; padding-bottom: 16px;
+      border-bottom: 1px solid rgba(99,102,241,0.12);
+    }
+    .section-number {
+      display: flex; align-items: center; justify-content: center;
+      width: 36px; height: 36px; border-radius: 10px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      color: #fff; font-size: 14px; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: 24px; font-weight: 700; color: #f1f5f9;
+    }
+    .section-desc {
+      font-size: 15px; color: #94a3b8; margin-bottom: 20px;
+      max-width: 800px;
+    }
+
+    /* ── Diagram Card ──────────────────────────────────────── */
+    .diagram-card {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(99,102,241,0.12);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      backdrop-filter: blur(10px);
+      transition: border-color 0.3s;
+      overflow-x: auto;
+    }
+    .diagram-card:hover {
+      border-color: rgba(99,102,241,0.3);
+    }
+    .diagram-card h3 {
+      font-size: 16px; font-weight: 600; color: #c7d2fe;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .diagram-card h3::before {
+      content: ''; display: block;
+      width: 4px; height: 18px; border-radius: 2px;
+      background: linear-gradient(180deg, #6366f1, #8b5cf6);
+    }
+
+    /* ── Table ─────────────────────────────────────────────── */
+    .tech-table-wrap {
+      overflow-x: auto;
+    }
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+    .tech-table thead th {
+      text-align: left;
+      padding: 14px 18px;
+      font-weight: 600;
+      font-size: 12px;
+      color: #a5b4fc;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      background: rgba(99,102,241,0.08);
+      border-bottom: 1px solid rgba(99,102,241,0.15);
+    }
+    .tech-table thead th:first-child { border-radius: 10px 0 0 0; }
+    .tech-table thead th:last-child { border-radius: 0 10px 0 0; }
+    .tech-table tbody td {
+      padding: 14px 18px;
+      border-bottom: 1px solid rgba(99,102,241,0.06);
+      color: #cbd5e1;
+      vertical-align: top;
+    }
+    .tech-table tbody tr:hover td {
+      background: rgba(99,102,241,0.04);
+    }
+    .tech-table .tech-name {
+      font-weight: 600; color: #e2e8f0;
+    }
+    .tech-table .tech-tag {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(99,102,241,0.12);
+      color: #a5b4fc;
+    }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    .doc-footer {
+      text-align: center; padding: 40px 0 30px;
+      border-top: 1px solid rgba(99,102,241,0.1);
+      color: #475569; font-size: 13px;
+    }
+
+    /* ── Mermaid overrides ─────────────────────────────────── */
+    .mermaid { text-align: center; }
+    .mermaid svg { max-width: 100%; height: auto; }
+
+    /* ── Responsive ────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .diagram-card { padding: 18px; }
+      .tech-table { font-size: 13px; }
+      .tech-table thead th, .tech-table tbody td { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ Navigation ═══ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">GoCart<span class="dot">.</span></a>
+    <div class="nav-links">
+      <a href="#architecture">Architecture</a>
+      <a href="#er-diagram">ER Diagram</a>
+      <a href="#auth-flow">Auth Flow</a>
+      <a href="#request-flow">Request Flow</a>
+      <a href="#tech-decisions">Tech Decisions</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ═══ Hero ═══ -->
+  <div class="hero">
+    <div class="hero-badge">Architecture Documentation</div>
+    <h1>GoCart System Architecture</h1>
+    <p>A comprehensive technical breakdown of the full-stack e-commerce marketplace — from database schema to payment flows and AI integrations.</p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       1. HIGH-LEVEL ARCHITECTURE DIAGRAM
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="architecture">
+    <div class="section-header">
+      <div class="section-number">1</div>
+      <div class="section-title">High-Level Architecture Diagram</div>
+    </div>
+    <p class="section-desc">End-to-end system overview showing all client layers, Next.js App Router, external services, and data flows between the frontend, backend API, database, and third-party integrations.</p>
+
+    <div class="diagram-card">
+      <h3>Full System Architecture</h3>
+      <div class="mermaid">
+        flowchart TB
+          subgraph CLIENT["🖥️ Client Layer"]
+            direction TB
+            Browser["Browser (React 19)"]
+            Redux["Redux Toolkit Store"]
+            Slices["Slices: cart · product · address · rating"]
+            Browser --> Redux --> Slices
+          end
+
+          subgraph NEXTJS["⚡ Next.js 16 App Router"]
+            direction TB
+            subgraph PAGES["Pages (SSR/CSR)"]
+              Public["Public Routes\n/ · /shop · /product · /cart\n/orders · /about · /contact\n/best-selling · /lowest-price\n/discounts · /pricing"]
+              Admin["Admin Dashboard\n/admin · /admin/stores\n/admin/coupons · /admin/approve"]
+              Store["Seller Portal\n/create-store"]
+            end
+            subgraph API["API Routes"]
+              ProductsAPI["/api/products"]
+              CartAPI["/api/cart"]
+              OrdersAPI["/api/orders"]
+              AddressAPI["/api/address"]
+              RatingAPI["/api/rating"]
+              CouponAPI["/api/coupon"]
+              StoreAPI["/api/store"]
+              AdminAPI["/api/admin/*"]
+              StripeWH["/api/stripe (webhook)"]
+              StockAPI["/api/stock-toggle"]
+              InngestAPI["/api/inngest"]
+            end
+            subgraph MW["Middleware Layer"]
+              AuthAdmin["authAdmin"]
+              AuthSeller["authSeller"]
+            end
+          end
+
+          subgraph EXTERNAL["🌐 External Services"]
+            Clerk["🔐 Clerk Auth"]
+            StripeService["💳 Stripe Payments"]
+            OpenAI["🤖 OpenAI API"]
+            ImageKit["📸 ImageKit CDN"]
+            Inngest["⏱️ Inngest (Background Jobs)"]
+          end
+
+          subgraph DATA["🗄️ Data Layer"]
+            Prisma["Prisma ORM\n(@prisma/adapter-neon)"]
+            NeonDB["☁️ Neon Serverless Postgres"]
+            Prisma --> NeonDB
+          end
+
+          CLIENT -->|"HTTP Requests"| NEXTJS
+          PAGES --> MW
+          MW -->|"verify"| Clerk
+          API --> Prisma
+          OrdersAPI -->|"Checkout Session"| StripeService
+          StripeService -->|"Webhook Events"| StripeWH
+          RatingAPI -->|"AI Review Summary"| OpenAI
+          StoreAPI -->|"Image Upload"| ImageKit
+          Inngest -->|"User Sync Events"| InngestAPI
+          Clerk -->|"user.created/updated/deleted"| Inngest
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Deployment &amp; Infrastructure</h3>
+      <div class="mermaid">
+        flowchart LR
+          subgraph HOSTING["Hosting"]
+            Vercel["Vercel\n(Next.js 16)"]
+          end
+          subgraph DATABASE["Database"]
+            Neon["Neon\nServerless Postgres"]
+          end
+          subgraph SERVICES["Third-Party Services"]
+            C1["Clerk (Auth)"]
+            C2["Stripe (Payments)"]
+            C3["ImageKit (CDN)"]
+            C4["OpenAI (AI)"]
+            C5["Inngest (Jobs)"]
+          end
+          Vercel <-->|"Prisma adapter-neon\n(HTTP + WebSocket)"| Neon
+          Vercel <--> C1
+          Vercel <--> C2
+          Vercel <--> C3
+          Vercel <--> C4
+          Vercel <--> C5
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       2. ER DIAGRAM
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="er-diagram">
+    <div class="section-header">
+      <div class="section-number">2</div>
+      <div class="section-title">ER Diagram (Entity-Relationship)</div>
+    </div>
+    <p class="section-desc">Complete database schema derived from <code>prisma/schema.prisma</code>. Shows all 7 models, their fields, data types, primary keys, foreign keys, and inter-model relationships.</p>
+
+    <div class="diagram-card">
+      <h3>Database Schema</h3>
+      <div class="mermaid">
+        erDiagram
+          USER {
+            String id PK
+            String name
+            String email
+            String image
+            Json cart
+          }
+
+          STORE {
+            String id PK
+            String userId FK "unique"
+            String name
+            String description
+            String username "unique"
+            String address
+            String status "default: pending"
+            Boolean isActive "default: false"
+            String logo
+            String email
+            String contact
+            DateTime createdAt
+            DateTime updatedAt
+          }
+
+          PRODUCT {
+            String id PK
+            String name
+            String description
+            Float mrp
+            Float price
+            StringArray images
+            String category
+            Boolean inStock "default: true"
+            String storeId FK
+            String reviewSummary "nullable"
+            DateTime reviewSummaryUpdatedAt "nullable"
+            Int ratingCount "default: 0"
+            Float averageRating "default: 0"
+            Json ratingBreakdown
+            DateTime createdAt
+            DateTime updatedAt
+          }
+
+          ORDER {
+            String id PK
+            Float total
+            OrderStatus status "default: ORDER_PLACED"
+            String userId FK
+            String storeId FK
+            String addressId FK
+            Boolean isPaid "default: false"
+            PaymentMethod paymentMethod
+            Boolean isCouponUsed "default: false"
+            Json coupon
+            DateTime createdAt
+            DateTime updatedAt
+          }
+
+          ORDER_ITEM {
+            String orderId PK_FK
+            String productId PK_FK
+            Int quantity
+            Float price
+          }
+
+          RATING {
+            String id PK
+            Int rating
+            String review
+            String userId FK
+            String productId FK
+            String orderId
+            DateTime createdAt
+            DateTime updatedAt
+          }
+
+          ADDRESS {
+            String id PK
+            String userId FK
+            String name
+            String email
+            String street
+            String city
+            String state
+            String zip
+            String country
+            String phone
+            DateTime createdAt
+          }
+
+          COUPON {
+            String code PK
+            String description
+            Float discount
+            Boolean forNewUser
+            Boolean forMember "default: false"
+            Boolean isPublic
+            DateTime expiresAt
+            DateTime createdAt
+          }
+
+          USER ||--o| STORE : "owns (1:1)"
+          USER ||--o{ RATING : "writes"
+          USER ||--o{ ADDRESS : "has"
+          USER ||--o{ ORDER : "places (BuyerRelation)"
+          STORE ||--o{ PRODUCT : "sells"
+          STORE ||--o{ ORDER : "receives"
+          PRODUCT ||--o{ ORDER_ITEM : "included in"
+          PRODUCT ||--o{ RATING : "rated by"
+          ORDER ||--o{ ORDER_ITEM : "contains"
+          ADDRESS ||--o{ ORDER : "ships to"
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Enum Definitions</h3>
+      <div class="mermaid">
+        flowchart LR
+          subgraph OrderStatus["🏷️ OrderStatus Enum"]
+            OS1["ORDER_PLACED"]
+            OS2["PROCESSING"]
+            OS3["SHIPPED"]
+            OS4["DELIVERED"]
+            OS1 --> OS2 --> OS3 --> OS4
+          end
+
+          subgraph PaymentMethod["💳 PaymentMethod Enum"]
+            PM1["COD"]
+            PM2["STRIPE"]
+          end
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       3. AUTHENTICATION FLOW
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="auth-flow">
+    <div class="section-header">
+      <div class="section-number">3</div>
+      <div class="section-title">Authentication Flow</div>
+    </div>
+    <p class="section-desc">Three-tier authentication system: Clerk handles user identity, Inngest synchronizes user data to the database, and custom middleware authorizes admin and seller actions.</p>
+
+    <div class="diagram-card">
+      <h3>User Registration &amp; Login (Clerk + Inngest Sync)</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor User
+          participant Browser
+          participant Clerk as Clerk Auth
+          participant Inngest as Inngest
+          participant API as Next.js API
+          participant DB as Neon Postgres
+
+          User->>Browser: Sign Up / Sign In
+          Browser->>Clerk: Clerk UI Component
+          Clerk-->>Browser: JWT Token + Session
+
+          Note over Clerk,Inngest: Webhook on user.created
+          Clerk->>Inngest: clerk/user.created event
+          Inngest->>API: POST /api/inngest
+          API->>DB: prisma.user.create({id, email, name, image})
+          DB-->>API: User created
+          API-->>Inngest: Success
+
+          Note over Clerk,Inngest: Webhook on user.updated
+          Clerk->>Inngest: clerk/user.updated event
+          Inngest->>API: POST /api/inngest
+          API->>DB: prisma.user.update(...)
+          DB-->>API: User updated
+
+          Note over Clerk,Inngest: Webhook on user.deleted
+          Clerk->>Inngest: clerk/user.deleted event
+          Inngest->>API: POST /api/inngest
+          API->>DB: prisma.user.delete(...)
+          DB-->>API: User deleted
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>API Request Authentication</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor User
+          participant Browser
+          participant Clerk as Clerk SDK
+          participant API as Next.js API Route
+          participant MW as Middleware
+          participant DB as Neon Postgres
+
+          User->>Browser: Perform action (e.g., place order)
+          Browser->>Clerk: getToken()
+          Clerk-->>Browser: JWT Bearer Token
+          Browser->>API: Request + Authorization header
+
+          API->>API: getAuth(request) → extract userId
+
+          alt Public API (products, about)
+            API->>DB: Query without auth check
+            DB-->>API: Data
+          end
+
+          alt Authenticated API (cart, orders, rating)
+            API->>API: Check userId exists
+            alt userId missing
+              API-->>Browser: 401 Not Authorized
+            else userId valid
+              API->>DB: Query with userId filter
+              DB-->>API: Data
+            end
+          end
+
+          alt Admin API (/api/admin/*)
+            API->>MW: authAdmin(userId)
+            MW->>Clerk: clerkClient.users.getUser(userId)
+            Clerk-->>MW: User email
+            MW->>MW: Compare email with ADMIN_EMAIL env
+            alt Email matches
+              MW-->>API: true (authorized)
+              API->>DB: Admin operation
+            else Email mismatch
+              MW-->>API: false
+              API-->>Browser: 403 Forbidden
+            end
+          end
+
+          alt Seller API (/api/store/*)
+            API->>MW: authSeller(userId)
+            MW->>DB: prisma.store.findUnique({userId})
+            alt Store exists and status == approved
+              MW-->>API: storeId
+              API->>DB: Seller operation
+            else No store or not approved
+              MW-->>API: null
+              API-->>Browser: 403 Forbidden
+            end
+          end
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Role Hierarchy</h3>
+      <div class="mermaid">
+        flowchart TD
+          subgraph Roles["👥 Authorization Roles"]
+            Visitor["👤 Visitor\n(No Auth Required)"]
+            Auth["🔑 Authenticated User\n(Clerk userId)"]
+            Seller["🏪 Seller\n(Approved Store Owner)"]
+            Admin["👑 Admin\n(ADMIN_EMAIL match)"]
+          end
+
+          Visitor -->|"Sign up/in via Clerk"| Auth
+          Auth -->|"Create Store → Admin Approves"| Seller
+          Auth -->|"Email in ADMIN_EMAIL env"| Admin
+
+          subgraph Permissions["🔒 Permissions"]
+            V_Perm["Browse products\nView shop pages"]
+            A_Perm["Cart · Orders · Ratings\nAddresses · Coupons"]
+            S_Perm["Manage products\nView store orders\nUpdate stock"]
+            Ad_Perm["Approve stores\nManage coupons\nView dashboard\nToggle store active"]
+          end
+
+          Visitor -.-> V_Perm
+          Auth -.-> A_Perm
+          Seller -.-> S_Perm
+          Admin -.-> Ad_Perm
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       4. REQUEST / SEQUENCE FLOW
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="request-flow">
+    <div class="section-header">
+      <div class="section-number">4</div>
+      <div class="section-title">Request / Sequence Flow</div>
+    </div>
+    <p class="section-desc">Detailed sequence diagrams for every major user journey: browsing products, managing the cart, placing orders (COD and Stripe), submitting ratings with AI summaries, and seller/store management.</p>
+
+    <div class="diagram-card">
+      <h3>Product Browsing &amp; Cart Flow</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor User
+          participant UI as React UI
+          participant Redux as Redux Store
+          participant API as /api/products
+          participant CartAPI as /api/cart
+          participant DB as Neon Postgres
+
+          Note over User,DB: Product Browsing
+          User->>UI: Visit /shop
+          UI->>Redux: dispatch(fetchProducts({}))
+          Redux->>API: GET /api/products
+          API->>DB: prisma.product.findMany(include: store)
+          DB-->>API: Products list
+          API->>API: Filter out inactive stores
+          API-->>Redux: Products JSON
+          Redux-->>UI: Render product grid
+
+          Note over User,DB: Add to Cart
+          User->>UI: Click "Add to Cart"
+          UI->>Redux: dispatch(addToCart(product))
+          Redux-->>UI: Update cart count (optimistic)
+
+          Note over User,DB: Cart Sync to DB
+          Redux->>CartAPI: POST /api/cart {cart}
+          CartAPI->>DB: prisma.user.update({cart})
+          DB-->>CartAPI: Updated
+          CartAPI-->>Redux: Success
+
+          Note over User,DB: Load Cart on Login
+          User->>UI: Sign in
+          UI->>Redux: dispatch(fetchCart({getToken}))
+          Redux->>CartAPI: GET /api/cart
+          CartAPI->>DB: prisma.user.findUnique({id}).cart
+          DB-->>CartAPI: Cart JSON
+          CartAPI-->>Redux: Cart data
+          Redux-->>UI: Render cart items
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Checkout &amp; Order Flow (COD + Stripe)</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor User
+          participant UI as Checkout UI
+          participant API as /api/orders
+          participant DB as Neon Postgres
+          participant Stripe as Stripe API
+          participant WebhookAPI as /api/stripe (Webhook)
+
+          User->>UI: Select address, payment, optional coupon
+          UI->>API: POST /api/orders {addressId, items, couponCode, paymentMethod}
+
+          API->>API: getAuth() → verify userId
+          API->>DB: Validate coupon (if provided)
+          API->>DB: Check new-user / member eligibility
+          API->>DB: Fetch each product → get storeId + price
+          API->>API: Group items by storeId
+
+          loop For each store
+            API->>API: Calculate total (apply coupon discount)
+            API->>API: Add $5 shipping if not Plus member
+            API->>DB: prisma.order.create({orderItems})
+            DB-->>API: Order created
+          end
+
+          alt Payment Method: COD
+            API->>DB: prisma.user.update({cart: {}})
+            API-->>UI: "Orders Placed Successfully"
+            UI-->>User: Redirect to /orders
+          end
+
+          alt Payment Method: STRIPE
+            API->>Stripe: stripe.checkout.sessions.create({metadata: orderIds, userId})
+            Stripe-->>API: Session URL
+            API-->>UI: {session}
+            UI->>Stripe: Redirect to Checkout page
+
+            alt Payment Succeeded
+              Stripe->>WebhookAPI: payment_intent.succeeded (signed)
+              WebhookAPI->>WebhookAPI: Verify signature
+              WebhookAPI->>Stripe: List sessions by payment_intent
+              Stripe-->>WebhookAPI: Session with metadata
+              WebhookAPI->>DB: Update all orders: isPaid = true
+              WebhookAPI->>DB: Clear user cart
+              WebhookAPI-->>Stripe: {received: true}
+            end
+
+            alt Payment Canceled
+              Stripe->>WebhookAPI: payment_intent.canceled
+              WebhookAPI->>DB: Delete all created orders
+              WebhookAPI-->>Stripe: {received: true}
+            end
+          end
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Rating &amp; AI Review Summary Flow</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor User
+          participant UI as Rating Modal
+          participant API as /api/rating
+          participant DB as Neon Postgres
+          participant AI as OpenAI API
+
+          User->>UI: Submit rating (1-5) + review text
+          UI->>API: POST /api/rating {rating, review, productId, orderId}
+          API->>API: getAuth() → verify userId
+          API->>DB: Verify order belongs to user
+          DB-->>API: Order verified
+
+          API->>DB: prisma.rating.create({userId, productId, orderId, rating, review})
+          DB-->>API: Rating created
+
+          Note over API,AI: AI Review Insights Generation
+          API->>DB: prisma.rating.findMany({productId})
+          DB-->>API: All reviews for product
+          API->>API: Calculate averageRating, ratingCount, distribution
+          API->>AI: Generate review summary (up to 80 reviews)
+          AI-->>API: AI-generated paragraph summary
+          API->>DB: prisma.product.update({reviewSummary, averageRating, ratingCount, ratingBreakdown})
+          DB-->>API: Product updated
+          API-->>UI: {insights: summary, distribution, averageRating}
+          UI-->>User: Show updated review insights
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Store Creation &amp; Approval Flow</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor Seller
+          actor Admin
+          participant SellerUI as Seller UI
+          participant AdminUI as Admin Dashboard
+          participant StoreAPI as /api/store
+          participant AdminAPI as /api/admin
+          participant ImageKit as ImageKit CDN
+          participant DB as Neon Postgres
+
+          Note over Seller,DB: Store Registration
+          Seller->>SellerUI: Fill store form + upload logo
+          SellerUI->>StoreAPI: POST /api/store/create {name, logo, ...}
+          StoreAPI->>ImageKit: Upload logo image
+          ImageKit-->>StoreAPI: Optimized image URL
+          StoreAPI->>DB: prisma.$transaction: create Store (status: pending) + link to User
+          DB-->>StoreAPI: Store created
+          StoreAPI-->>SellerUI: "Store created, pending approval"
+
+          Note over Admin,DB: Admin Approval
+          Admin->>AdminUI: View pending stores
+          AdminUI->>AdminAPI: GET /api/admin (pending stores)
+          AdminAPI->>DB: prisma.store.findMany({status: pending})
+          DB-->>AdminAPI: Pending stores list
+          AdminAPI-->>AdminUI: Render pending stores
+
+          Admin->>AdminUI: Approve store
+          AdminUI->>AdminAPI: POST /api/admin/approve-store {storeId}
+          AdminAPI->>DB: prisma.store.update({status: approved, isActive: true})
+          DB-->>AdminAPI: Store approved
+          AdminAPI-->>AdminUI: Success
+
+          Note over Seller,DB: Product Management (Post-Approval)
+          Seller->>SellerUI: Add new product + images
+          SellerUI->>StoreAPI: POST /api/store/product
+          StoreAPI->>StoreAPI: authSeller(userId) → verify approved store
+          StoreAPI->>ImageKit: Upload product images
+          ImageKit-->>StoreAPI: Image URLs
+          StoreAPI->>DB: prisma.product.create({...})
+          DB-->>StoreAPI: Product created
+          StoreAPI-->>SellerUI: Product added
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Coupon &amp; Inngest Background Job Flow</h3>
+      <div class="mermaid">
+        sequenceDiagram
+          actor Admin
+          participant AdminUI as Admin Dashboard
+          participant API as /api/coupon
+          participant DB as Neon Postgres
+          participant Inngest as Inngest
+
+          Admin->>AdminUI: Create coupon with expiry
+          AdminUI->>API: POST /api/coupon {code, discount, expiresAt, ...}
+          API->>DB: prisma.coupon.create(...)
+          DB-->>API: Coupon created
+
+          API->>Inngest: inngest.send("app/coupon.expired", {code, expires_at})
+          Inngest-->>API: Event scheduled
+
+          Note over Inngest,DB: Auto-cleanup on Expiry
+          Inngest->>Inngest: step.sleepUntil(expiresAt)
+          Note right of Inngest: Waits until expiry date
+          Inngest->>DB: prisma.coupon.delete({code})
+          DB-->>Inngest: Coupon deleted
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════
+       5. TECHNOLOGY DECISION SHEET
+       ═══════════════════════════════════════════════════════ -->
+  <div class="section" id="tech-decisions">
+    <div class="section-header">
+      <div class="section-number">5</div>
+      <div class="section-title">Technology Decision Sheet</div>
+    </div>
+    <p class="section-desc">Rationale behind every major technology choice in the GoCart stack, including alternatives considered and why each decision was made.</p>
+
+    <div class="diagram-card">
+      <div class="tech-table-wrap">
+        <table class="tech-table">
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Technology</th>
+              <th>Version</th>
+              <th>Rationale</th>
+              <th>Alternatives Considered</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tech-tag">Framework</span></td>
+              <td class="tech-name">Next.js (App Router)</td>
+              <td>16.1.6</td>
+              <td>Full-stack React framework with SSR, API routes, file-based routing, and Edge/Serverless support. App Router enables React Server Components and streaming.</td>
+              <td>Remix, Nuxt.js, plain Express + React</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">UI Library</span></td>
+              <td class="tech-name">React</td>
+              <td>19.2.3</td>
+              <td>Latest React with concurrent features, Server Components support, and improved performance. Largest ecosystem of component libraries.</td>
+              <td>Vue 3, Svelte, Solid.js</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">State Mgmt</span></td>
+              <td class="tech-name">Redux Toolkit + React-Redux</td>
+              <td>2.11.2</td>
+              <td>Predictable centralized state for cart, products, addresses, and ratings. Built-in async thunk support via <code>createAsyncThunk</code>. Four slices keep concerns separated.</td>
+              <td>Zustand, Jotai, React Context</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Auth</span></td>
+              <td class="tech-name">Clerk</td>
+              <td>6.38.2</td>
+              <td>Fully managed auth with pre-built UI components, JWT sessions, webhook events, and a Clerk+ membership plan system. Eliminates need to build login/register flows manually.</td>
+              <td>NextAuth.js, Auth0, Supabase Auth, Firebase Auth</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Database</span></td>
+              <td class="tech-name">Neon Serverless Postgres</td>
+              <td>—</td>
+              <td>Fully managed PostgreSQL with serverless scaling, branching for dev environments, and instant cold-start. HTTP driver works natively in Edge/Serverless without persistent connections.</td>
+              <td>Supabase Postgres, PlanetScale, AWS RDS, Railway Postgres</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">ORM</span></td>
+              <td class="tech-name">Prisma + @prisma/adapter-neon</td>
+              <td>5.22.0</td>
+              <td>Type-safe database access with auto-generated client, migrations, and relation handling. The Neon adapter enables HTTP-based queries for serverless compatibility (no connection pooling needed).</td>
+              <td>Drizzle ORM, Kysely, raw SQL via @neondatabase/serverless</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Payments</span></td>
+              <td class="tech-name">Stripe</td>
+              <td>20.4.1</td>
+              <td>Industry-standard payment processing with Checkout Sessions for secure PCI-compliant payment collection. Webhook-driven architecture ensures reliable order confirmation. Supports multi-store marketplace payout models.</td>
+              <td>Razorpay, PayPal, LemonSqueezy</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">AI</span></td>
+              <td class="tech-name">OpenAI</td>
+              <td>6.27.0</td>
+              <td>Powers AI-generated review summaries. Uses GPT to analyze up to 80 customer reviews and produce a concise insight paragraph. Configurable via <code>OPENAI_BASE_URL</code> to swap providers.</td>
+              <td>Anthropic Claude, Google Gemini, Hugging Face, local LLMs</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Background Jobs</span></td>
+              <td class="tech-name">Inngest</td>
+              <td>3.52.3</td>
+              <td>Event-driven serverless job runner. Handles: (1) Clerk user sync (create/update/delete), (2) Coupon auto-deletion via <code>step.sleepUntil()</code>. Durable execution guarantees even across deploy cycles.</td>
+              <td>Trigger.dev, QStash, BullMQ + Redis, AWS SQS</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Image CDN</span></td>
+              <td class="tech-name">ImageKit</td>
+              <td>4.1.4</td>
+              <td>Server-side image upload with automatic optimization, resizing, and global CDN delivery. Used for store logos and product images. Simple SDK with URL-based transformations.</td>
+              <td>Cloudinary, AWS S3 + CloudFront, Uploadthing</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Styling</span></td>
+              <td class="tech-name">Tailwind CSS</td>
+              <td>4.x</td>
+              <td>Utility-first CSS framework. v4 uses CSS-native engine (no PostCSS plugin needed for JIT). Rapid UI prototyping with consistent design tokens. Used with <code>@tailwindcss/postcss</code>.</td>
+              <td>Vanilla CSS, Styled Components, CSS Modules, UnoCSS</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Typography</span></td>
+              <td class="tech-name">Outfit (Google Fonts)</td>
+              <td>—</td>
+              <td>Modern geometric sans-serif with multiple weights (400, 500, 600). Loaded via <code>next/font/google</code> for automatic optimization and zero layout shift.</td>
+              <td>Inter, Poppins, DM Sans</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">HTTP Client</span></td>
+              <td class="tech-name">Axios</td>
+              <td>1.13.6</td>
+              <td>Promise-based HTTP client with interceptors, automatic JSON transforms, and request/response error handling. Used in Redux async thunks for API calls.</td>
+              <td>Native fetch, ky, got</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Charts</span></td>
+              <td class="tech-name">Recharts</td>
+              <td>3.7.0</td>
+              <td>React-native charting library built on D3. Used in admin dashboard for orders area chart visualization. Declarative API with responsive containers.</td>
+              <td>Chart.js, Nivo, Tremor, Victory</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Icons</span></td>
+              <td class="tech-name">Lucide React</td>
+              <td>0.564.0</td>
+              <td>Lightweight, tree-shakable icon library with 1000+ consistent icons. Fork of Feather Icons with active community maintenance.</td>
+              <td>React Icons, Heroicons, Phosphor Icons</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Notifications</span></td>
+              <td class="tech-name">React Hot Toast</td>
+              <td>2.6.0</td>
+              <td>Lightweight toast notification library with promise-based API, customizable styling, and accessible defaults. Minimal bundle impact.</td>
+              <td>Sonner, React Toastify, Notistack</td>
+            </tr>
+            <tr>
+              <td><span class="tech-tag">Date Utils</span></td>
+              <td class="tech-name">date-fns</td>
+              <td>4.1.0</td>
+              <td>Modular date utility library. Tree-shakable functions — only import what you use. Used for formatting order dates and coupon expiry display.</td>
+              <td>Day.js, Luxon, Temporal API</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagram-card">
+      <h3>Architecture Decision Records (Key Trade-offs)</h3>
+      <div class="mermaid">
+        flowchart TB
+          subgraph D1["ADR-1: Cart Storage"]
+            Q1["Where to store cart?"]
+            A1A["Option A: Separate Cart table"]
+            A1B["Option B: JSON field on User ✅"]
+            Q1 --> A1A
+            Q1 --> A1B
+            R1["Rationale: Single user.cart JSON avoids\nextra joins. Simple for read/write.\nTrade-off: No cart item history."]
+            A1B --> R1
+          end
+
+          subgraph D2["ADR-2: Multi-Store Orders"]
+            Q2["How to handle multi-store checkout?"]
+            A2A["Option A: Single order, multiple stores"]
+            A2B["Option B: One order per store ✅"]
+            Q2 --> A2A
+            Q2 --> A2B
+            R2["Rationale: Each store gets its own order\nfor independent fulfillment and tracking.\nSingle Stripe session covers total amount."]
+            A2B --> R2
+          end
+
+          subgraph D3["ADR-3: User Sync Strategy"]
+            Q3["How to keep DB in sync with Clerk?"]
+            A3A["Option A: API call on first request"]
+            A3B["Option B: Inngest webhook sync ✅"]
+            Q3 --> A3A
+            Q3 --> A3B
+            R3["Rationale: Inngest ensures durable,\nreliable sync with retry logic.\nNo latency impact on user requests."]
+            A3B --> R3
+          end
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Footer ═══ -->
+  <div class="doc-footer">
+    <p>GoCart Architecture Documentation · Generated from source code analysis · Open this file in a browser to view all diagrams</p>
+  </div>
+
+</div>
+
+<!-- ═══ Smooth scroll ═══ -->
+<script>
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const target = document.querySelector(a.getAttribute('href'));
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
+    });
+  });
+</script>
+
+</body>
+</html>

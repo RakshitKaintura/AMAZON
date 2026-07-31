@@ -1,0 +1,132 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Project Flows - Mermaid Diagrams</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>body{background:#0b1220;color:#e6eef8;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;padding:20px} h1{font-size:20px;margin-bottom:8px} .diagram{background:#121826;border-radius:8px;padding:18px;margin:18px 0;box-shadow:0 6px 18px rgba(2,6,23,0.6)}</style>
+  <script type="module">
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true, theme: 'dark' });
+    window.mermaid = mermaid;
+  </script>
+</head>
+<body>
+  <h1>GoCart — Project Flow Diagrams</h1>
+  <p>Open this file in a browser to view the rendered diagrams. Each section below shows the Mermaid source and the rendered diagram.</p>
+
+  <div class="diagram">
+    <h2>Browse & Product Listing</h2>
+    <div class="mermaid">
+      flowchart TD
+        U[User] -->|Open shop| C[Client/UI]
+        C -->|GET /api/products| API[/API: /api/products/]
+        API -->|prisma.product.findMany| DB[(Postgres/Prisma)]
+        DB --> API
+        API -->|filter inactive stores| C
+        C -->|render| UI[Product list UI]
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Add To Cart</h2>
+    <div class="mermaid">
+      flowchart TD
+        U[User] -->|Click add/qty change| UI[Product UI]
+        UI -->|dispatch| Redux[Redux cart slice]
+        Redux -->|update local state| UI
+        Redux -->|debounced uploadCart|getToken[Get Clerk token]
+        getToken -->|POST /api/cart| API[/API: /api/cart/]
+        API -->|prisma.user.update(cart)| DB[(Postgres/Prisma)]
+        DB --> API
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Checkout & Order Creation</h2>
+    <div class="mermaid">
+      flowchart TD
+        U[User] -->|Checkout submit| UI[Checkout UI]
+        UI -->|POST /api/orders| API[/API: /api/orders/]
+        API -->|group items by storeId| G[Group by store]
+        G -->|for each store| CreateOrder[Create Order & OrderItems via Prisma]
+        CreateOrder --> DB[(Postgres/Prisma)]
+        DB --> CreateOrder
+        API -->|if paymentMethod == STRIPE| StripeCreate[Create Stripe Checkout Session]
+        StripeCreate -->|return session| UI
+        UI -->|redirect to Stripe| Stripe[Stripe Checkout]
+        Stripe -->|on success/cancel| Webhook[/Stripe webhook -> /api/stripe/]
+        API -->|if COD| Finalize[Clear cart & return success]
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Stripe Webhook (Payment Confirmation)</h2>
+    <div class="mermaid">
+      flowchart TD
+        Stripe[Stripe] -->|POST signed event| Webhook[/API: /api/stripe/]
+        Webhook -->|verify signature with STRIPE_WEBHOOK_SECRET| Verify[Verify event]
+        Verify -->|get payment_intent id| SessionLookup[Retrieve Checkout Session metadata]
+        SessionLookup -->|read orderIds,userId,appId| API
+        API -->|if appId != 'gocart'| Ignore[Ignore]
+        API -->|if payment_intent.succeeded| MarkPaid[Update Orders: isPaid = true]
+        MarkPaid --> DB[(Postgres/Prisma)]
+        DB --> MarkPaid
+        API -->|clear user's cart| ClearCart[prisma.user.update(cart = {})]
+        API -->|if payment_intent.canceled| DeleteOrders[Delete created orders]
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Ratings Flow</h2>
+    <div class="mermaid">
+      flowchart TD
+        U[User] -->|Submit rating + review| UI[Rating UI]
+        UI -->|POST /api/rating| API[/API: /api/rating/]
+        API -->|verify order ownership| DB[(Postgres/Prisma)]
+        DB --> API
+        API -->|create Rating row| CreateRating[prisma.rating.create]
+        CreateRating --> DB
+        API -->|trigger| Insights[refreshProductReviewInsights (OpenAI)]
+        Insights -->|update| ProductSummary[Product review summary fields]
+        ProductSummary --> DB
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Seller Flow</h2>
+    <div class="mermaid">
+      flowchart TD
+        Seller[Seller User] -->|POST store form + image| APICreate[/API: /api/store/create/]
+        APICreate -->|upload image| ImageKit[ImageKit]
+        ImageKit -->|return optimized URL| APICreate
+        APICreate -->|prisma.$transaction create Store & link to User| DB[(Postgres/Prisma)]
+        DB --> APICreate
+        APICreate -->|Store status = pending| Pending[Store: pending]
+        Admin[Admin] -->|approve store| ApproveAPI[/API: /api/admin/approve-store/]
+        ApproveAPI -->|update store.status = approved| DB
+        DB --> ApproveAPI
+        Seller -->|after approval: POST /api/store/product| APIProduct[/API: /api/store/product/]
+        APIProduct -->|authSeller checks store.status == approved| DB
+        APIProduct -->|upload images -> ImageKit -> save Product rows| DB
+    </div>
+  </div>
+
+  <div class="diagram">
+    <h2>Admin Flow</h2>
+    <div class="mermaid">
+      flowchart TD
+        AdminUser[Admin User] -->|Call admin API| AdminAPI[/API: /api/admin/*/]
+        AdminAPI -->|authAdmin: Clerk lookup| Clerk[Clerk]
+        Clerk -->|get user email| AdminAPI
+        AdminAPI -->|compare email with ADMIN_EMAIL| Check[ADMIN_EMAIL env var]
+        Check -->|if match| Allow[Allow access]
+        Allow -->|approve stores / toggle isActive / dashboard| DB[(Postgres/Prisma)]
+        DB --> Allow
+        Check -->|if not match| Deny[403 Not authorized]
+    </div>
+  </div>
+
+  <p>Tip: If your environment doesn't render Mermaid in the browser, open this file with a modern browser that allows module imports, or paste each Mermaid block into the online Mermaid Live Editor: <a href="https://mermaid.live" target="_blank">https://mermaid.live</a>.</p>
+</body>
+</html>

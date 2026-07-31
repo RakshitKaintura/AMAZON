@@ -1,4 +1,3 @@
-=======
 # GoCart: Amazon-Like E-Commerce Platform
 
 Fast, polished, and production-ready e‑commerce starter showcasing seller workflows, admin tooling, secure Stripe checkout, and AI-driven review insights.
